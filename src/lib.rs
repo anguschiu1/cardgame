@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -24,7 +26,7 @@ pub enum FrenchRank {
     King,
     Ace, // will be 14
 }
-#[derive(EnumIter, Debug, PartialEq, Clone, Copy)]
+#[derive(EnumIter, Debug, PartialEq, Eq, Hash)]
 pub enum SpotItSuit {
     Apple,
     Banana,
@@ -60,7 +62,9 @@ pub enum SpotItSuit {
 
 #[derive(Debug)]
 pub struct FrenchCard(FrenchRank, FrenchSuit);
-pub struct SpotItCard(SpotItSuit);
+
+#[derive(Debug)]
+pub struct SpotItCard(HashSet<SpotItSuit>);
 
 pub struct FrenchDeck {
     pub cards: Vec<FrenchCard>,
@@ -85,6 +89,30 @@ impl FrenchDeck {
     pub fn shuffle() {}
     pub fn draw_cards() {}
 }
+#[derive(Debug)]
+pub struct SpotItDeck {
+    pub cards: Vec<SpotItCard>,
+}
+
+impl Default for SpotItDeck {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+impl SpotItDeck {
+    pub fn new() -> Self {
+        let cards = Vec::new();
+        let mut deck = SpotItDeck { cards };
+        for suit in SpotItSuit::iter() {
+            let mut card = SpotItCard(HashSet::new());
+            card.0.insert(suit);
+            deck.cards.push(card);
+        }
+        deck
+    }
+    pub fn shuffle() {}
+    pub fn draw_cards() {}
+}
 
 #[cfg(test)]
 mod tests {
@@ -100,5 +128,18 @@ mod tests {
         assert_eq!(ten, 10);
         let ace = FrenchRank::Ace as u8;
         assert_eq!(ace, 14);
+    }
+
+    #[test]
+    fn new_spotitdeck_has_31_cards() {
+        let deck: SpotItDeck = SpotItDeck::default();
+        assert_eq!(deck.cards.len(), 31);
+    }
+    #[test]
+    fn each_spotitcard_has_1_suits() {
+        let deck: SpotItDeck = SpotItDeck::default();
+        for card in deck.cards {
+            assert_eq!(card.0.len(), 1);
+        }
     }
 }
