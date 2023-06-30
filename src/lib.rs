@@ -2,14 +2,14 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 #[derive(EnumIter, Debug, PartialEq, Clone, Copy)]
-pub enum Suit {
-    Club,
+pub enum FrenchSuit {
+    Club = 1,
     Diamond,
     Heart,
     Spade,
 }
 #[derive(EnumIter, Debug, PartialEq, Clone, Copy)]
-pub enum Rank {
+pub enum FrenchRank {
     Two = 2,
     Three,
     Four,
@@ -22,22 +22,65 @@ pub enum Rank {
     Jack,
     Queen,
     King,
-    Ace,
+    Ace, // will be 14
 }
+#[derive(EnumIter, Debug, PartialEq, Clone, Copy)]
+pub enum SpotItSuit {
+    Apple,
+    Banana,
+    Bread,
+    Broccoli,
+    Carrot,
+    Cheese,
+    Chicken,
+    Corn,
+    Egg,
+    Fish,
+    Grape,
+    Hamburger,
+    Hotdog,
+    Icecream,
+    Lettuce,
+    Milk,
+    Mushroom,
+    Onion,
+    Orange,
+    Pea,
+    Pear,
+    Pepper,
+    Pineapple,
+    Pizza,
+    Potato,
+    Pumpkin,
+    Strawberry,
+    Tomato,
+    Watermelon,
+    Yogurt,
+}
+
 #[derive(Debug)]
-pub struct Card(Rank, Suit);
+pub struct FrenchCard(FrenchRank, FrenchSuit);
+pub struct SpotItCard(SpotItSuit);
 
-pub struct Deck {}
+pub struct FrenchDeck {
+    pub cards: Vec<FrenchCard>,
+}
 
-impl Deck {
-    pub fn new() -> Vec<Card> {
-        let mut deck = Vec::new();
-        for suit in Suit::iter() {
-            for rank in Rank::iter() {
-                deck.push(Card(rank.clone(), suit.clone()));
+impl Default for FrenchDeck {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+impl FrenchDeck {
+    pub fn new() -> Self {
+        let cards = Vec::new();
+        let mut deck = FrenchDeck { cards };
+        for suit in FrenchSuit::iter() {
+            for rank in FrenchRank::iter() {
+                deck.cards.push(FrenchCard(rank, suit));
             }
         }
-        return deck;
+        deck
     }
     pub fn shuffle() {}
     pub fn draw_cards() {}
@@ -46,25 +89,16 @@ impl Deck {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // #[test]
-    // fn it_works() {
-    //     let deck = Deck {
-    //         card: (Suit::Club, Rank::Two),
-    //     };
-    //     match deck.card {
-    //         (Suit::Club, Rank::Two) => println!("hi"),
-    //         _ => println!("bye."),
-    //     }
-    // }
     #[test]
-    fn new_deck_has_52_cards() {
-        let deck = Deck::new();
-        assert_eq!(deck.len(), 52);
+    fn new_frenchdeck_has_52_cards() {
+        let deck: FrenchDeck = FrenchDeck::default();
+        assert_eq!(deck.cards.len(), 52);
     }
     #[test]
-    fn rank_is_cast_as_u8() {
-        let ten = Rank::Ten as u8;
+    fn french_rank_is_cast_as_u8() {
+        let ten = FrenchRank::Ten as u8;
         assert_eq!(ten, 10);
+        let ace = FrenchRank::Ace as u8;
+        assert_eq!(ace, 14);
     }
 }

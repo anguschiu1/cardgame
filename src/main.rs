@@ -1,6 +1,6 @@
-use cardgame::{Deck, Rank, Suit};
+use cardgame::{FrenchDeck, FrenchRank, FrenchSuit};
 
 fn main() {
-    let deck = Deck::new();
-    dbg!(&deck[..]);
+    let deck = FrenchDeck::new();
+    dbg!(&deck.cards[..]);
 }
