@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -75,8 +77,8 @@ impl Default for FrenchDeck {
         Self::new()
     }
 }
-impl FrenchDeck {
-    pub fn new() -> Self {
+impl Deck<FrenchCard> for FrenchDeck {
+    fn new() -> Self {
         let cards = Vec::new();
         let mut deck = FrenchDeck { cards };
         for suit in FrenchSuit::iter() {
@@ -86,8 +88,9 @@ impl FrenchDeck {
         }
         deck
     }
-    pub fn shuffle() {}
-    pub fn draw_cards() {}
+    fn shuffle(&mut self) {
+        self.cards.shuffle(&mut thread_rng());
+    }
 }
 #[derive(Debug)]
 pub struct SpotItDeck {
@@ -99,9 +102,9 @@ impl Default for SpotItDeck {
         Self::new()
     }
 }
-impl SpotItDeck {
-    pub fn new() -> Self {
-        let cards = Vec::new();
+impl Deck<SpotItCard> for SpotItDeck {
+    fn new() -> Self {
+        let cards: Vec<SpotItCard> = Vec::new();
         let mut deck = SpotItDeck { cards };
         for suit in SpotItSuit::iter() {
             let mut card = SpotItCard(HashSet::new());
@@ -110,10 +113,15 @@ impl SpotItDeck {
         }
         deck
     }
-    pub fn shuffle() {}
-    pub fn draw_cards() {}
+    fn shuffle(&mut self) {
+        self.cards.shuffle(&mut thread_rng());
+    }
 }
 
+pub trait Deck<T> {
+    fn new() -> Self;
+    fn shuffle(&mut self) {}
+}
 #[cfg(test)]
 mod tests {
     use super::*;
