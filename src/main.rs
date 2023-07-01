@@ -1,6 +1,4 @@
 use cardgame::{Deck, FrenchDeck, SpotItDeck};
-use rand::seq::SliceRandom;
-use rand::thread_rng;
 
 fn main() {
     let mut french_deck = FrenchDeck::default();

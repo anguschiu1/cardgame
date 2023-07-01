@@ -5,14 +5,14 @@ use rand::thread_rng;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-#[derive(EnumIter, Debug, PartialEq, Clone, Copy)]
+#[derive(EnumIter, Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum FrenchSuit {
     Club = 1,
     Diamond,
     Heart,
     Spade,
 }
-#[derive(EnumIter, Debug, PartialEq, Clone, Copy)]
+#[derive(EnumIter, Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum FrenchRank {
     Two = 2,
     Three,
@@ -61,23 +61,28 @@ pub enum SpotItSuit {
     Watermelon,
     Yogurt,
 }
-
-#[derive(Debug)]
+pub trait Deck {
+    fn default() -> Self;
+    fn new() -> Self;
+    fn shuffle(&mut self);
+}
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct FrenchCard(FrenchRank, FrenchSuit);
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct SpotItCard(HashSet<SpotItSuit>);
-
+#[derive(Debug)]
 pub struct FrenchDeck {
     pub cards: Vec<FrenchCard>,
 }
-
-impl Default for FrenchDeck {
+#[derive(Debug)]
+pub struct SpotItDeck {
+    pub cards: Vec<SpotItCard>,
+}
+impl Deck for FrenchDeck {
     fn default() -> Self {
         Self::new()
     }
-}
-impl Deck<FrenchCard> for FrenchDeck {
     fn new() -> Self {
         let cards = Vec::new();
         let mut deck = FrenchDeck { cards };
@@ -92,17 +97,11 @@ impl Deck<FrenchCard> for FrenchDeck {
         self.cards.shuffle(&mut thread_rng());
     }
 }
-#[derive(Debug)]
-pub struct SpotItDeck {
-    pub cards: Vec<SpotItCard>,
-}
 
-impl Default for SpotItDeck {
+impl Deck for SpotItDeck {
     fn default() -> Self {
         Self::new()
     }
-}
-impl Deck<SpotItCard> for SpotItDeck {
     fn new() -> Self {
         let cards: Vec<SpotItCard> = Vec::new();
         let mut deck = SpotItDeck { cards };
@@ -118,10 +117,6 @@ impl Deck<SpotItCard> for SpotItDeck {
     }
 }
 
-pub trait Deck<T> {
-    fn new() -> Self;
-    fn shuffle(&mut self) {}
-}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -129,6 +124,12 @@ mod tests {
     fn new_frenchdeck_has_52_cards() {
         let deck: FrenchDeck = FrenchDeck::default();
         assert_eq!(deck.cards.len(), 52);
+    }
+    #[test]
+    fn every_card_on_frenchdeck_is_unique() {
+        let deck: FrenchDeck = FrenchDeck::default();
+        let mut uniq = HashSet::new();
+        assert!(deck.cards.iter().all(move |card| uniq.insert(card)));
     }
     #[test]
     fn french_rank_is_cast_as_u8() {
@@ -141,7 +142,16 @@ mod tests {
     #[test]
     fn new_spotitdeck_has_31_cards() {
         let deck: SpotItDeck = SpotItDeck::default();
-        assert_eq!(deck.cards.len(), 31);
+        assert_eq!(deck.cards.len(), 30);
+    }
+    #[test]
+    fn every_card_on_spotitdeck_is_unique() {
+        todo!("implement this test")
+    }
+    #[test]
+    fn can_add_a_card_on_spotitdeck() {
+        let card = SpotItCard(HashSet::from([SpotItSuit::Potato]));
+        assert_eq!(card.0.get(&SpotItSuit::Potato), Some(&SpotItSuit::Potato));
     }
     #[test]
     fn each_spotitcard_has_1_suits() {
