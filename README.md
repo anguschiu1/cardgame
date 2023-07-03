@@ -21,12 +21,12 @@ SpotIt is a game where you have to find the same symbol on two cards. Each card 
 
 ## How to run
 
-TODO
+`cargo run`
 
 ## How to build
 
-TODO
+`cargo build`
 
 ## How to test
 
-TODO
+`cargo test`

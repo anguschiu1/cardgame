@@ -28,7 +28,7 @@ pub enum FrenchRank {
     King,
     Ace, // will be 14
 }
-#[derive(EnumIter, Debug, PartialEq, Eq, Hash)]
+#[derive(EnumIter, Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum SpotItSuit {
     Apple,
     Banana,
@@ -69,7 +69,7 @@ pub trait Deck {
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct FrenchCard(FrenchRank, FrenchSuit);
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Clone, Eq)]
 pub struct SpotItCard(HashSet<SpotItSuit>);
 #[derive(Debug)]
 pub struct FrenchDeck {
@@ -145,8 +145,26 @@ mod tests {
         assert_eq!(deck.cards.len(), 30);
     }
     #[test]
+    fn can_compare_spotitcard() {
+        let card1 = SpotItCard(HashSet::from([SpotItSuit::Potato]));
+        let card2 = SpotItCard(HashSet::from([SpotItSuit::Potato]));
+        assert_eq!(card1, card2);
+    }
+    #[test]
+    fn can_add_suit_to_spotitcard() {
+        let mut card1 = SpotItCard(HashSet::from([SpotItSuit::Potato]));
+        card1.0.insert(SpotItSuit::Apple);
+        let card2 = SpotItCard(HashSet::from([SpotItSuit::Potato]));
+        assert_ne!(card1, card2);
+    }
+
+    #[test]
     fn every_card_on_spotitdeck_is_unique() {
-        todo!("implement this test")
+        let mut deck: SpotItDeck = SpotItDeck::default();
+        for _ in 1..=deck.cards.len() {
+            let card = deck.cards.pop().unwrap();
+            assert!(deck.cards.iter().all(move |c| c != &card));
+        }
     }
     #[test]
     fn can_add_a_card_on_spotitdeck() {
