@@ -1,17 +1,35 @@
-use std::collections::HashSet;
+#![allow(missing_docs)]
+#![warn(rustdoc::private_doc_tests)]
+
+//! Core library for the `cardgame` crate.
+//!
+//! Provide the core functionality to play SpotIt!.
+//! Auxillary functions to play other card games like French Card game, but it is for testing purposes only.
+//!
+//! [`Repository`]: https://github.com/anguschiu1/cardgame
+//! [`SpotIt!`]: https://www.amazon.com/Asmodee-SP411-Spot-It/dp/B0039S7NO6
+//! [`French Card Game`]: https://en.wikipedia.org/wiki/French_playing_cards
+//! [`SpotIt! Rules`]: https://www.ultraboardgames.com/spot-it/game-rules.php
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
+use std::collections::HashSet;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
+/// This defines the suits of the French Card Game.
 #[derive(EnumIter, Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum FrenchSuit {
+    /// This is a club, not a clover. The number 1 is not used in the French Card Game, but it is for the ease to compare power of suits in French cards.
     Club = 1,
+    /// This is a diamond.
     Diamond,
+    /// This is a heart.
     Heart,
+    /// This is a spade.
     Spade,
 }
+/// This defines the ranks of the French Card Game.
 #[derive(EnumIter, Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum FrenchRank {
     Two = 2,
@@ -29,6 +47,7 @@ pub enum FrenchRank {
     Ace, // will be 14
 }
 #[derive(EnumIter, Debug, PartialEq, Clone, Copy, Eq, Hash)]
+/// Thie enum defines the suits (or pattern) of the SpotIt! game. One card can has one or more suits.
 pub enum SpotItSuit {
     Apple,
     Banana,
@@ -61,42 +80,61 @@ pub enum SpotItSuit {
     Watermelon,
     Yogurt,
 }
+/// This trait defines the common functionality of a deck of cards.
 pub trait Deck<T> {
-    fn default() -> Self;
+    /// This function creates a new, empty deck of cards.
     fn new() -> Self;
+    /// This function creates a new deck of cards with default values, e.g. a deck of French Cards with 52 cards, or a deck of SpotIt Cards with 30 cards.
+    fn default() -> Self;
+    /// This function mututate original deck and shuffles the deck of cards.
     fn shuffle(&mut self);
+    /// This function pops one card from the deck of cards.
     fn pop_card(&mut self) -> Option<T>;
 }
+/// This tuple struct defines a French Card.
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub struct FrenchCard(FrenchRank, FrenchSuit);
 
 impl FrenchCard {
+    /// This function returns the rank of the card.
     pub fn rank(&self) -> FrenchRank {
         self.0
     }
+    /// This function returns the suit of the card.
     pub fn suit(&self) -> FrenchSuit {
         self.1
     }
+    /// This function returns true if the suit of the card is the same as the suit of the other card.
     pub fn match_suit(&self, card: &Self) -> bool {
         self.1 == card.1
     }
+    /// This function returns true if the rank of the card is the same as the rank of the other card.
     pub fn match_rank(&self, card: &Self) -> bool {
         self.0 == card.0
     }
 }
+
+/// This tuple struct defines a SpotIt Card.
+/// Please notice that a SpotIt Card can have 0, 1, or more than one suits. For example, a card can have both Apple and Banana suits.
 #[derive(Debug, PartialEq, Clone, Eq)]
 pub struct SpotItCard(HashSet<SpotItSuit>);
 impl SpotItCard {
+    /// This function returns true if the two cards have exactly one suit in common.
+    /// This is the key rule of the SpotIt game.
     pub fn match_exactly_one_suit(&self, card: &Self) -> bool {
         self.0.intersection(&card.0).count() == 1
     }
 }
+/// This struct defines a deck of French Cards.
 #[derive(Debug)]
 pub struct FrenchDeck {
+    /// This is a vector storing a deck of French Cards.
     pub cards: Vec<FrenchCard>,
 }
+/// This struct defines a deck of SpotIt Cards.
 #[derive(Debug)]
 pub struct SpotItDeck {
+    /// This is a vector storing a deck of SpotIt Cards.
     pub cards: Vec<SpotItCard>,
 }
 impl Deck<FrenchCard> for FrenchDeck {
@@ -208,7 +246,7 @@ mod tests {
         assert_eq!(deck.pop_card(), Some(card));
     }
     #[test]
-    fn new_spotitdeck_has_31_cards() {
+    fn new_spotitdeck_has_30_cards() {
         let deck: SpotItDeck = SpotItDeck::default();
         assert_eq!(deck.cards.len(), 30);
     }
@@ -234,10 +272,13 @@ mod tests {
         let card2: SpotItCard = SpotItCard(HashSet::from([SpotItSuit::Potato, SpotItSuit::Apple]));
         let card3: SpotItCard = SpotItCard(HashSet::from([SpotItSuit::Potato, SpotItSuit::Apple]));
         let card4: SpotItCard = SpotItCard(HashSet::from([SpotItSuit::Yogurt]));
+        let card5 = SpotItCard(HashSet::new());
+        let card6 = SpotItCard(HashSet::new());
         assert!(card1.match_exactly_one_suit(&card2));
         assert!(card2.match_exactly_one_suit(&card1));
         assert!(!card3.match_exactly_one_suit(&card2)); // cards that have more than one suit in common
         assert!(!card4.match_exactly_one_suit(&card3)); // cards that have no suit in common
+        assert!(!card5.match_exactly_one_suit(&card6)); // cards that have no suit in common as they are both empty
     }
     #[test]
     fn can_add_suit_to_spotitcard() {
@@ -268,6 +309,7 @@ mod tests {
         let card = SpotItCard(HashSet::from([SpotItSuit::Potato]));
         deck.cards.push(card.clone());
         assert_eq!(deck.pop_card(), Some(card));
+        assert_eq!(deck.pop_card(), None);
     }
     #[test]
     fn each_spotitcard_has_1_suits() {

@@ -2,12 +2,12 @@
 
 This is a simple SpotIt card game written in Rust.
 
-There are four goals:
+There are four goals to be achieved incrementally:
 
 1. A CLI game that allows one to set the table and play Spot It! by himself (or herself)
 2. It will become a Rust cargo library to be used in other projects, a.k.a. the immediate follow up would be a WASM game of Spot It! in the browser.
-3. The game will deployed into a Pi Zero 2 W, and playable in the browser using WASM
-4. to let me write shit using Rust as embedded programming :)
+3. The game will be fine-tuned and become deployable into a Pi Zero 2 W, and playable in the browser using WASM
+4. The game wiill become a multiple-player game, with a server and a client, and a web interface, running on Pi Zero 2 W
 
 ## How to play
 
