@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <title>Spot it! (a.k.a. Dobble) card game CLI</title>
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+    <h1 class="title">Spot it! (a.k.a. Dobble) card game CLI</h1>
+    <nav id="TOC"><ul>
+<li><a href="#how-to-play">0.1 How to play</a><ul></ul></li>
+<li><a href="#maths-behind-the-game">0.2 Maths behind the game</a><ul>
+<li><a href="#reference">0.2.1 Reference</a><ul></ul></li></ul></li>
+<li><a href="#how-to-run">0.3 How to run</a><ul></ul></li>
+<li><a href="#how-to-build">0.4 How to build</a><ul></ul></li>
+<li><a href="#how-to-test">0.5 How to test</a><ul></ul></li></ul></nav><p>This is a simple SpotIt card game written in Rust.</p>
+<p>There are four goals to be achieved incrementally:</p>
+<ol>
+<li>A CLI game that allows one to set the table and play Spot It! by himself (or herself)</li>
+<li>It will become a Rust cargo library to be used in other projects, a.k.a. the immediate follow up would be a WASM game of Spot It! in the browser.</li>
+<li>The game will be fine-tuned and become deployable into a Pi Zero 2 W, and playable in the browser using WASM</li>
+<li>The game wiill become a multiple-player game, with a server and a client, and a web interface, running on Pi Zero 2 W</li>
+</ol>
+<h2 id="how-to-play"><a href="#how-to-play">0.1 How to play</a></h2>
+<p>SpotIt is a game where you have to find the same symbol on two cards. Each card has exactly one symbol in common with any other card. The first player to find the symbol wins the round and gets a point. The player with the most points at the end of the game wins.</p>
+<h2 id="maths-behind-the-game"><a href="#maths-behind-the-game">0.2 Maths behind the game</a></h2><h3 id="reference"><a href="#reference">0.2.1 Reference</a></h3>
+<p><a href="https://www.petercollingridge.co.uk/blog/mathematics-toys-and-games/dobble/">Here</a> and <a href="https://www.smithsonianmag.com/science-nature/math-card-game-spot-it-180970873/">there</a></p>
+<h2 id="how-to-run"><a href="#how-to-run">0.3 How to run</a></h2>
+<p><code>cargo run</code></p>
+<h2 id="how-to-build"><a href="#how-to-build">0.4 How to build</a></h2>
+<p><code>cargo build</code></p>
+<h2 id="how-to-test"><a href="#how-to-test">0.5 How to test</a></h2>
+<p><code>cargo test</code></p>
+
+    
+</body>
+</html>
