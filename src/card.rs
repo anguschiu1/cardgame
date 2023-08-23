@@ -76,6 +76,7 @@ pub enum SpotItSymbol {
     Tomato,
     Watermelon,
     Yogurt,
+    Yam,
 }
 
 /// This tuple struct defines a French Card.

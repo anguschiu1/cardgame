@@ -10,4 +10,5 @@ strum = "0.24.1"
 strum_macros = "0.24.1"
 rand = "0.8.4"
 itertools = "0.10.3"
+prime-checker = "0.2.21"
 

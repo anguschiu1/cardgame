@@ -10,6 +10,8 @@
 //! [`SpotIt!`]: https://www.amazon.com/Asmodee-SP411-Spot-It/dp/B0039S7NO6
 //! [`French Card Game`]: https://en.wikipedia.org/wiki/French_playing_cards
 //! [`SpotIt! Rules`]: https://www.ultraboardgames.com/spot-it/game-rules.php
+//! [`Maths behind SpotIt! card game]: https://www.smithsonianmag.com/science-nature/math-card-game-spot-it-180970873/
+//! [`More Maths behind SpotIt! card game]: https://science.mom/images/Worksheets/ScienceWorksheets/SpotIt.pdf
 
 pub mod card;
 use card::{FrenchCard, FrenchRank, FrenchSuit, SpotItCard, SpotItSymbol};
@@ -115,24 +117,44 @@ impl Deck<SpotItCard> for SpotItDeck {
 }
 
 impl SpotItDeck {
-    fn generate_by_prime(n: u8) -> Result<SpotItDeck, String> {
-        if SpotItSymbol::iter().count() < (n * n + n + 1) as usize {
-            Err("n is too large, hence not enough symobls to generate deck.".to_string())
+    /// This function generates a deck of SpotIt Cards by a prime number n.
+    pub fn generate_by_prime(n: u8) -> Result<SpotItDeck, String> {
+        if (n * n + n + 1) as usize > SpotItSymbol::iter().count() {
+            println!("{} is too large", n);
+            return Err("n is too large, hence not enough symobls to generate deck.".to_string());
         } else {
-            let mut deck = SpotItDeck::new();
-            let count = (n * n + 1) as usize;
-            let symbols_per_card: usize = (n + 1).into();
-
-            for i in 0..count {
-                let mut card = SpotItCard(HashSet::new());
-                for j in 0..symbols_per_card {
-                    card.0
-                        .insert(SpotItSymbol::iter().nth(i + j * n as usize).unwrap());
-                }
-                deck.cards.push(card);
+            let (check, _) = prime_checker::is_prime(n as u64);
+            if check {
+                println!("{} is prime", n);
+            } else {
+                println!("{} is NOT prime", n);
+                return Err("{} is not prime".to_string());
             }
-            Ok(deck)
         }
+        println!(
+            "SpotItSymbol::iter().count() is {}",
+            SpotItSymbol::iter().count()
+        );
+        let mut deck = SpotItDeck::new();
+        // deck_size = n^2 + n + 1
+        let deck_size = (n * n + n + 1).into();
+        // symbols_used = n^2 + n + 1
+        let symbols_used: usize = (n * n + n + 1).into();
+        // symbols_per_card = n + 1
+        let symbols_per_card: usize = (n + 1).into();
+
+        // 1. Create a deck of cards
+        for i in 0..deck_size {
+            // 2. Create a card
+            let mut card = SpotItCard(HashSet::new());
+            // 3. Add n + 1 symbols to the card
+            for j in 0..symbols_per_card {
+                // 4. Add symbol to the card using the formula
+                card.0.insert(SpotItSymbol::iter().nth(1).unwrap());
+            }
+            deck.cards.push(card);
+        }
+        Ok(deck)
     }
 }
 
@@ -168,7 +190,7 @@ mod tests {
     #[test]
     fn new_spotitdeck_has_30_cards() {
         let deck: SpotItDeck = SpotItDeck::default();
-        assert_eq!(deck.cards.len(), 30);
+        assert_eq!(deck.cards.len(), 31);
     }
 
     #[test]
@@ -204,16 +226,34 @@ mod tests {
     #[test]
     fn can_generate_by_prime() {
         let deck = SpotItDeck::generate_by_prime(1).unwrap();
-        assert_eq!(deck.cards.len(), 1 * 1 + 1);
+        assert_eq!(deck.cards.len(), 1 * 1 + 1 + 1);
         let deck = SpotItDeck::generate_by_prime(2).unwrap();
-        assert_eq!(deck.cards.len(), 2 * 2 + 1);
+        assert_eq!(deck.cards.len(), 2 * 2 + 2 + 1);
         let deck = SpotItDeck::generate_by_prime(3).unwrap();
-        assert_eq!(deck.cards.len(), 3 * 3 + 1);
-        let deck = SpotItDeck::generate_by_prime(4).unwrap();
-        assert_eq!(deck.cards.len(), 4 * 4 + 1);
+        assert_eq!(deck.cards.len(), 3 * 3 + 3 + 1);
+
+        // // return error if n is not prime
+        assert!(SpotItDeck::generate_by_prime(4).is_err());
+
         let deck = SpotItDeck::generate_by_prime(5).unwrap();
-        assert_eq!(deck.cards.len(), 5 * 5 + 1);
-        // return error if n is too large
+        assert_eq!(deck.cards.len(), 5 * 5 + 5 + 1);
+
+        // // return error if n is too large
         assert!(SpotItDeck::generate_by_prime(6).is_err());
+    }
+    #[test]
+    fn can_generate_by_prime_3() {
+        let mut deck = SpotItDeck::generate_by_prime(3).unwrap();
+        assert_eq!(deck.cards.len(), 3 * 3 + 3 + 1);
+        let first_card = SpotItCard(HashSet::from([
+            SpotItSymbol::Apple,
+            SpotItSymbol::Banana,
+            SpotItSymbol::Bread,
+            SpotItSymbol::Fish,
+        ]));
+        let card = deck.cards.pop().unwrap();
+
+        // The first card is [0,1,2,9], which is [Apple, Banana, Bread, Fish]
+        assert_eq!(card, first_card);
     }
 }
