@@ -184,7 +184,7 @@ mod tests {
         assert!(!card5.match_exactly_one_suit(&card6)); // cards that have no suit in common as they are both empty
     }
     #[test]
-    fn can_add_suit_to_spotitcard() {
+    fn can_add_symbol_to_spotitcard() {
         let mut card1 = SpotItCard(HashSet::from([SpotItSymbol::Potato]));
         card1.0.insert(SpotItSymbol::Apple);
         let card2 = SpotItCard(HashSet::from([SpotItSymbol::Potato]));
