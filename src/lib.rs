@@ -121,91 +121,138 @@ impl Deck<SpotItCard> for SpotItDeck {
 impl SpotItDeck {
     /// This function generates a deck of SpotIt Cards by a prime number n.
     pub fn generate_by_prime(n: u8) -> Result<SpotItDeck, String> {
+        // Check if the n is too large for defaul symbols to generate deck
+        // n^2 + n + 1 <= default symbols
         if (n * n + n + 1) as usize > SpotItSymbol::iter().count() {
-            return Err("n is too large, hence not enough symobls to generate deck.".to_string());
+            Err("n is too large, hence not enough symobls to generate deck.".to_string())
+        // Check if the n is prime
         } else if let (false, _) = prime_checker::is_prime(n as u64) {
-            return Err("{} is not prime".to_string());
-        }
-        let mut deck = SpotItDeck::new();
+            Err("{} is not prime".to_string())
 
-        let deck_size: usize = (n * n + n + 1).into(); // deck_size = n^2 + n + 1
-        let symbols_per_card: usize = (n + 1).into(); // symbols_per_card = n + 1
+        // handle n = 1 edge case
+        } else if n == 1 {
+            let mut deck = SpotItDeck::new();
+            let (plane, line) = SpotItDeck::gen_projective_plane(n);
 
-        let plane = SpotItDeck::gen_projective_plane(n);
-        let slopes = SpotItDeck::cal_slope(n);
+            dbg!(&plane);
+            dbg!(&line);
 
-        for slope in slopes.iter() {
-            println!("slope: {:?}", slope);
-            for c in 0..n {
+            let line_symbols = line.clone();
+            for line_symbol in line {
                 let mut symbol_on_plane = HashSet::new();
-                for x in 0..n * n {
-                    for y in 0..n * n {
-                        match slope {
-                            fraction::GenericFraction::NaN => {}
-                            fraction::GenericFraction::Infinity(_) => {
-                                if x as u64 == c as u64 {
-                                    println!("x: {}, y: {}, a: inf, c: {}", x, y, c);
-                                    symbol_on_plane
-                                        .insert(plane[(x % n) as usize][(y % n) as usize]);
+                symbol_on_plane.insert(plane[0][0]);
+                symbol_on_plane.insert(line_symbol);
+                let mut card = SpotItCard(HashSet::new());
+                card.0 = symbol_on_plane.clone();
+                deck.push_card(card);
+            }
+            let mut card = SpotItCard(HashSet::new());
+            card.0 = line_symbols.into_iter().collect();
+            deck.push_card(card);
+
+            dbg!(&deck);
+
+            Ok(deck)
+        }
+        // other cases
+        else {
+            let mut deck = SpotItDeck::new();
+            // deck_size = n^2 + n + 1
+            // symbols_per_card = n + 1
+
+            // Generate a projective plane of n^2 + n + 1 symbols
+            let (plane, line) = SpotItDeck::gen_projective_plane(n);
+            dbg!(&plane);
+            dbg!(&line);
+
+            let mut line_iter = line.iter();
+            dbg!(&line_iter);
+
+            // TODO Calculate the set of slope of the plane using fractions
+            let slopes = SpotItDeck::cal_slope(n);
+
+            for slope in slopes.iter() {
+                println!("slope: {:?}", slope);
+                let line_symbol = *(line_iter.next().unwrap());
+                for c in 0..n {
+                    let mut symbol_on_plane = HashSet::new();
+                    for x in 0..n * n {
+                        for y in 0..n * n {
+                            match slope {
+                                fraction::GenericFraction::NaN => {}
+                                fraction::GenericFraction::Infinity(_) => {
+                                    if x as u64 == c as u64 {
+                                        println!("x: {}, y: {}, a: inf, c: {}", x, y, c);
+                                        symbol_on_plane
+                                            .insert(plane[(y % n) as usize][(x % n) as usize]);
+                                    }
                                 }
-                            }
-                            fraction::GenericFraction::Rational(_, slope) => {
-                                if y as u64 == slope.numer() / slope.denom() * x as u64 + c as u64 {
-                                    println!(
-                                        "x: {}, y: {}, a: {:.2}, c: {}",
-                                        x,
-                                        y,
-                                        (slope.numer() / slope.denom()),
-                                        c
-                                    );
-                                    symbol_on_plane
-                                        .insert(plane[(x % n) as usize][(y % n) as usize]);
+                                fraction::GenericFraction::Rational(_, slope) => {
+                                    if y as u64
+                                        == slope.numer() / slope.denom() * x as u64 + c as u64
+                                    {
+                                        println!(
+                                            "x: {}, y: {}, a: {:.2}, c: {}",
+                                            x,
+                                            y,
+                                            (slope.numer() / slope.denom()),
+                                            c
+                                        );
+                                        symbol_on_plane
+                                            .insert(plane[(y % n) as usize][(x % n) as usize]);
+                                    }
                                 }
                             }
                         }
-                        let mut card = SpotItCard(HashSet::new());
-                        card.0 = symbol_on_plane.clone();
-                        deck.push_card(card);
                     }
+                    symbol_on_plane.insert(line_symbol);
+                    let mut card = SpotItCard(HashSet::new());
+                    card.0 = symbol_on_plane.clone();
+                    deck.push_card(card);
+                    dbg!(&symbol_on_plane);
                 }
-                println!("symbol_on_plane: {:?}", symbol_on_plane);
             }
-        }
-        for row in plane.iter() {
-            for symbol in row.iter() {
-                println!("{:?}", symbol);
-            }
-        }
-
-        // TODO Calculate the symbol for each card
-
-        // TODO Add the symbol to the card
-        // TODO add the card to the deck
-        // 1. Create a deck of cards with empty symbols
-        for i in 0..deck_size {
-            // 2. Create a card
             let mut card = SpotItCard(HashSet::new());
-            // 3. Add n + 1 symbols to the card
-            for j in 0..symbols_per_card {
-                // 4. Add symbol to the card using the formula
-                card.0.insert(SpotItSymbol::iter().nth(1).unwrap());
-            }
-            deck.cards.push(card);
+            card.0 = line.into_iter().collect();
+            deck.push_card(card);
+            dbg!(&deck);
+            dbg!(&deck.cards.len());
+
+            // TODO Calculate the symbol for each card
+
+            // TODO Add the symbol to the card
+            // TODO add the card to the deck
+            // 1. Create a deck of cards with empty symbols
+            // for i in 0..deck_size {
+            //     // 2. Create a card
+            //     let mut card = SpotItCard(HashSet::new());
+            //     // 3. Add n + 1 symbols to the card
+            //     for j in 0..symbols_per_card {
+            //         // 4. Add symbol to the card using the formula
+            //         card.0.insert(SpotItSymbol::iter().nth(1).unwrap());
+            //     }
+            //     deck.cards.push(card);
+            // }
+            return Ok(deck);
         }
-        Ok(deck)
     }
 
-    fn gen_projective_plane(n: u8) -> Vec<Vec<SpotItSymbol>> {
+    /// This function fills symbols onto a plane [y][x] (note: inverted x and y) where x and y are both in range of 0..n.
+    fn gen_projective_plane(n: u8) -> (Vec<Vec<SpotItSymbol>>, Vec<SpotItSymbol>) {
         let mut symbol = SpotItSymbol::iter();
         let mut plane: Vec<Vec<SpotItSymbol>> = Vec::new();
-        for x in 0..n {
+        let mut line: Vec<SpotItSymbol> = Vec::new();
+        for _ in 0..n {
             let mut row: Vec<SpotItSymbol> = Vec::new();
-            for y in 0..n {
+            for _ in 0..n {
                 row.push(symbol.next().unwrap());
             }
             plane.push(row);
         }
-        plane
+        for _ in 0..=n {
+            line.push(symbol.next().unwrap());
+        }
+        (plane, line)
     }
 
     fn cal_slope(n: u8) -> Vec<Fraction> {
@@ -214,10 +261,10 @@ impl SpotItDeck {
         for i in 0..n {
             slope.push(F::new(1u8, i));
         }
-        // debug slope
-        for i in slope.iter() {
-            println!("slope vector is:{:?}", i);
-        }
+        // // debug slope
+        // for i in slope.iter() {
+        //     println!("slope vector is:{:?}", i);
+        // }
         slope
     }
 }
@@ -306,24 +353,24 @@ mod tests {
         // // return error if n is too large
         assert!(SpotItDeck::generate_by_prime(6).is_err());
     }
-    // #[test]
-    // fn can_generate_deck_of_card_by_prime_3() {
-    //     let mut deck = SpotItDeck::generate_by_prime(3).unwrap();
-    //     assert_eq!(deck.cards.len(), 3 * 3 + 3 + 1);
-    //     let first_card = SpotItCard(HashSet::from([
-    //         SpotItSymbol::Apple,
-    //         SpotItSymbol::Banana,
-    //         SpotItSymbol::Bread,
-    //         SpotItSymbol::Fish,
-    //     ]));
-    //     let card = deck.cards.pop().unwrap();
+    #[test]
+    fn can_generate_right_deck_of_card_by_prime_3() {
+        let deck = SpotItDeck::generate_by_prime(3).unwrap();
+        assert_eq!(deck.cards.len(), 3 * 3 + 3 + 1);
+        let first_card = SpotItCard(HashSet::from([
+            SpotItSymbol::Apple,
+            SpotItSymbol::Banana,
+            SpotItSymbol::Bread,
+            SpotItSymbol::Fish,
+        ]));
+        let card = deck.cards.first().unwrap();
 
-    //     // The first card is [0,1,2,9], which is [Apple, Banana, Bread, Fish]
-    //     assert_eq!(card, first_card);
-    // }
+        // The first card is [0,1,2,9], which is [Apple, Banana, Bread, Fish]
+        assert_eq!(*card, first_card);
+    }
     #[test]
     fn can_generate_projective_plane_of_5_with_symbols() {
-        let plane = SpotItDeck::gen_projective_plane(5);
+        let (plane, line) = SpotItDeck::gen_projective_plane(5);
         assert_eq!(plane.len(), 5);
         assert_eq!(plane[0].len(), 5);
         assert_eq!(plane[1].len(), 5);
@@ -337,6 +384,7 @@ mod tests {
         assert_eq!(plane[0][4], SpotItSymbol::Carrot);
         assert_eq!(plane[1][0], SpotItSymbol::Cheese);
         assert_eq!(plane[1][1], SpotItSymbol::Chicken);
+        assert_eq!(line.len(), 6);
 
         let mut symbols = SpotItSymbol::iter();
         for x in plane.iter() {

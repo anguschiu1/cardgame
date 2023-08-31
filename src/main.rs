@@ -1,4 +1,4 @@
-use cardgame::{Deck, FrenchDeck, SpotItDeck};
+use cardgame::SpotItDeck;
 
 fn main() {
     // let mut french_deck = FrenchDeck::default();
@@ -22,6 +22,7 @@ fn main() {
     // dbg!(&spotit_deck.cards);
     // dbg!(&spotit_deck.cards.len());
 
-    let mut spotit_deck = SpotItDeck::generate_by_prime(3).unwrap();
-    // dbg!(&spotit_deck.cards);
+    let spotit_deck = SpotItDeck::generate_by_prime(3).unwrap();
+    println!("SpotIt prime of 5 has a deck of these cards: \n");
+    dbg!(&spotit_deck.cards);
 }
