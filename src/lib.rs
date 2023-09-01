@@ -27,18 +27,26 @@ type F = fraction::Fraction;
 pub trait Deck<T> {
     /// This function creates a new, empty deck of cards.
     fn new() -> Self;
+
     /// This function creates a new deck of cards with default values, e.g. a deck of French Cards with 52 cards, or a deck of SpotIt Cards with 30 cards.
     fn default() -> Self;
+
     /// This function mututate original deck and shuffles the deck of cards.
     fn shuffle(&mut self);
-    /// This function pops one card from the deck of cards.
+
+    /// This function pops one card (latest) from the deck of cards.
     fn pop_card(&mut self) -> Option<T>;
+
+    /// This function pops one card (by index) from the deck of cards.
+    fn pop_card_by_index(&mut self, index: usize) -> Option<T>;
+
     /// This function pushes one card to the deck of cards.
     fn push_card(&mut self, card: T);
 
     /// This function returns the number of cards in the deck.
     fn len(&self) -> usize;
-    /// This function returns the number of cards in the deck.
+
+    /// This function returns false if the deck is empty.
     fn is_empty(&self) -> bool;
 }
 
@@ -85,17 +93,25 @@ impl Deck<FrenchCard> for FrenchDeck {
     fn len(&self) -> usize {
         self.cards.len()
     }
+
+    fn pop_card_by_index(&mut self, index: usize) -> Option<FrenchCard> {
+        match self.len() {
+            n if n > index => Some(self.cards.remove(index)),
+            _ => None,
+        }
+    }
 }
 
 impl Deck<SpotItCard> for SpotItDeck {
     fn push_card(&mut self, card: SpotItCard) {
         self.cards.push(card);
     }
+    /// This function creates a new deck of SpotIt Cards with default 1 symbol per card.
     fn default() -> Self {
         let mut deck = Self::new();
-        for suit in SpotItSymbol::iter() {
+        for symbol in SpotItSymbol::iter() {
             let mut card = SpotItCard(HashSet::new());
-            card.0.insert(suit);
+            card.0.insert(symbol);
             deck.cards.push(card);
         }
         deck
@@ -116,6 +132,13 @@ impl Deck<SpotItCard> for SpotItDeck {
     fn len(&self) -> usize {
         self.cards.len()
     }
+
+    fn pop_card_by_index(&mut self, index: usize) -> Option<SpotItCard> {
+        match self.cards.len() {
+            n if n > index => Some(self.cards.remove(index)),
+            _ => None,
+        }
+    }
 }
 
 impl SpotItDeck {
@@ -133,11 +156,8 @@ impl SpotItDeck {
         } else if n == 1 {
             let mut deck = SpotItDeck::new();
             let (plane, line) = SpotItDeck::gen_projective_plane(n);
-
-            dbg!(&plane);
-            dbg!(&line);
-
             let line_symbols = line.clone();
+
             for line_symbol in line {
                 let mut symbol_on_plane = HashSet::new();
                 symbol_on_plane.insert(plane[0][0]);
@@ -146,11 +166,7 @@ impl SpotItDeck {
                 card.0 = symbol_on_plane.clone();
                 deck.push_card(card);
             }
-            let mut card = SpotItCard(HashSet::new());
-            card.0 = line_symbols.into_iter().collect();
-            deck.push_card(card);
-
-            dbg!(&deck);
+            deck.push_card(SpotItCard(line_symbols.into_iter().collect()));
 
             Ok(deck)
         }
@@ -162,13 +178,10 @@ impl SpotItDeck {
 
             // Generate a projective plane of n^2 + n + 1 symbols
             let (plane, line) = SpotItDeck::gen_projective_plane(n);
-            dbg!(&plane);
-            dbg!(&line);
 
             let mut line_iter = line.iter();
-            dbg!(&line_iter);
 
-            // TODO Calculate the set of slope of the plane using fractions
+            // Calculate the set of slope of the plane using fractions
             let slopes = SpotItDeck::cal_slope(n);
 
             for slope in slopes.iter() {
@@ -176,6 +189,8 @@ impl SpotItDeck {
                 let line_symbol = *(line_iter.next().unwrap());
                 for c in 0..n {
                     let mut symbol_on_plane = HashSet::new();
+                    // loop around an enlarged plane to find the symbols on the line
+                    // FIXME: this is a hacky way to loop around the plane, find a better way to do this
                     for x in 0..n * n {
                         for y in 0..n * n {
                             match slope {
@@ -206,34 +221,13 @@ impl SpotItDeck {
                         }
                     }
                     symbol_on_plane.insert(line_symbol);
-                    let mut card = SpotItCard(HashSet::new());
-                    card.0 = symbol_on_plane.clone();
-                    deck.push_card(card);
+                    deck.push_card(SpotItCard(symbol_on_plane.clone()));
                     dbg!(&symbol_on_plane);
                 }
             }
-            let mut card = SpotItCard(HashSet::new());
-            card.0 = line.into_iter().collect();
-            deck.push_card(card);
-            dbg!(&deck);
-            dbg!(&deck.cards.len());
+            deck.push_card(SpotItCard(line.into_iter().collect()));
 
-            // TODO Calculate the symbol for each card
-
-            // TODO Add the symbol to the card
-            // TODO add the card to the deck
-            // 1. Create a deck of cards with empty symbols
-            // for i in 0..deck_size {
-            //     // 2. Create a card
-            //     let mut card = SpotItCard(HashSet::new());
-            //     // 3. Add n + 1 symbols to the card
-            //     for j in 0..symbols_per_card {
-            //         // 4. Add symbol to the card using the formula
-            //         card.0.insert(SpotItSymbol::iter().nth(1).unwrap());
-            //     }
-            //     deck.cards.push(card);
-            // }
-            return Ok(deck);
+            Ok(deck)
         }
     }
 
@@ -261,10 +255,6 @@ impl SpotItDeck {
         for i in 0..n {
             slope.push(F::new(1u8, i));
         }
-        // // debug slope
-        // for i in slope.iter() {
-        //     println!("slope vector is:{:?}", i);
-        // }
         slope
     }
 }
@@ -300,9 +290,9 @@ mod tests {
         assert_eq!(deck.pop_card(), Some(card));
     }
     #[test]
-    fn new_spotitdeck_has_30_cards() {
+    fn new_spotitdeck_has_93_cards() {
         let deck: SpotItDeck = SpotItDeck::default();
-        assert_eq!(deck.cards.len(), 31);
+        assert_eq!(deck.cards.len(), 93);
     }
 
     #[test]
@@ -316,14 +306,14 @@ mod tests {
     #[test]
     fn can_push_pop_same_card_on_spotitdeck() {
         let mut deck: SpotItDeck = SpotItDeck::new();
-        let card = SpotItCard(HashSet::from([SpotItSymbol::Potato]));
+        let card = SpotItCard(HashSet::from([SpotItSymbol::Banana]));
         deck.cards.push(card.clone());
         assert_eq!(deck.cards.pop(), Some(card));
     }
     #[test]
     fn can_use_fn_to_pop_card_from_spotitdeck() {
         let mut deck: SpotItDeck = SpotItDeck::new();
-        let card = SpotItCard(HashSet::from([SpotItSymbol::Potato]));
+        let card = SpotItCard(HashSet::from([SpotItSymbol::Banana]));
         deck.cards.push(card.clone());
         assert_eq!(deck.pop_card(), Some(card));
         assert_eq!(deck.pop_card(), None);
@@ -338,7 +328,7 @@ mod tests {
     #[test]
     fn can_generate_right_cards_number_by_prime() {
         let deck = SpotItDeck::generate_by_prime(1).unwrap();
-        assert_eq!(deck.cards.len(), 1 * 1 + 1 + 1);
+        assert_eq!(deck.cards.len(), 1 + 1 + 1);
         let deck = SpotItDeck::generate_by_prime(2).unwrap();
         assert_eq!(deck.cards.len(), 2 * 2 + 2 + 1);
         let deck = SpotItDeck::generate_by_prime(3).unwrap();
@@ -359,9 +349,9 @@ mod tests {
         assert_eq!(deck.cards.len(), 3 * 3 + 3 + 1);
         let first_card = SpotItCard(HashSet::from([
             SpotItSymbol::Apple,
-            SpotItSymbol::Banana,
-            SpotItSymbol::Bread,
-            SpotItSymbol::Fish,
+            SpotItSymbol::Apricot,
+            SpotItSymbol::Avocado,
+            SpotItSymbol::Currant,
         ]));
         let card = deck.cards.first().unwrap();
 
@@ -378,12 +368,12 @@ mod tests {
         assert_eq!(plane[3].len(), 5);
         assert_eq!(plane[4].len(), 5);
         assert_eq!(plane[0][0], SpotItSymbol::Apple);
-        assert_eq!(plane[0][1], SpotItSymbol::Banana);
-        assert_eq!(plane[0][2], SpotItSymbol::Bread);
-        assert_eq!(plane[0][3], SpotItSymbol::Broccoli);
-        assert_eq!(plane[0][4], SpotItSymbol::Carrot);
-        assert_eq!(plane[1][0], SpotItSymbol::Cheese);
-        assert_eq!(plane[1][1], SpotItSymbol::Chicken);
+        assert_eq!(plane[0][1], SpotItSymbol::Apricot);
+        assert_eq!(plane[0][2], SpotItSymbol::Avocado);
+        assert_eq!(plane[0][3], SpotItSymbol::Banana);
+        assert_eq!(plane[0][4], SpotItSymbol::Bilberry);
+        assert_eq!(plane[1][0], SpotItSymbol::Blackberry);
+        assert_eq!(plane[1][1], SpotItSymbol::Blackcurrant);
         assert_eq!(line.len(), 6);
 
         let mut symbols = SpotItSymbol::iter();
@@ -401,5 +391,27 @@ mod tests {
         assert_eq!(slope[1], F::new(1u8, 0u8));
         assert_eq!(slope[2], F::new(1u8, 1u8));
         assert_eq!(slope[3], F::new(1u8, 2u8));
+    }
+    #[test]
+    fn can_pop_french_card_by_index() {
+        let mut deck: FrenchDeck = FrenchDeck::default();
+        let first_card = FrenchCard(FrenchRank::Ace, FrenchSuit::Spade);
+        let last_card = FrenchCard(FrenchRank::Two, FrenchSuit::Club);
+        assert_eq!(deck.len(), 52);
+        assert_eq!(deck.pop_card_by_index(52), None);
+        assert_eq!(deck.pop_card_by_index(0), Some(last_card));
+        assert_eq!(deck.pop_card_by_index(50), Some(first_card));
+        assert_eq!(deck.len(), 50);
+    }
+    #[test]
+    fn can_pop_spotit_card_by_index() {
+        let mut deck: SpotItDeck = SpotItDeck::default();
+        let first_card = SpotItCard(HashSet::from([SpotItSymbol::Yuzu]));
+        let last_card = SpotItCard(HashSet::from([SpotItSymbol::Apple]));
+        assert_eq!(deck.len(), 93);
+        assert_eq!(deck.pop_card_by_index(94), None);
+        assert_eq!(deck.pop_card_by_index(0), Some(last_card));
+        assert_eq!(deck.pop_card_by_index(91), Some(first_card));
+        assert_eq!(deck.len(), 91);
     }
 }
