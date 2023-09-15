@@ -13,8 +13,11 @@
 //! [`Maths behind SpotIt! card game]: https://www.smithsonianmag.com/science-nature/math-card-game-spot-it-180970873/
 //! [`More Maths behind SpotIt! card game]: https://science.mom/images/Worksheets/ScienceWorksheets/SpotIt.pdf
 
-pub mod card;
-use card::{FrenchCard, FrenchRank, FrenchSuit, SpotItCard, SpotItSymbol};
+pub mod frenchcard;
+use frenchcard::{FrenchCard, FrenchRank, FrenchSuit};
+
+pub mod spotitcard;
+use spotitcard::{SpotItCard, SpotItSymbol};
 
 use fraction::Fraction;
 use rand::seq::SliceRandom;
@@ -28,7 +31,7 @@ pub trait Deck<T> {
     /// This function creates a new, empty deck of cards.
     fn new() -> Self;
 
-    /// This function creates a new deck of cards with default values, e.g. a deck of French Cards with 52 cards, or a deck of SpotIt Cards with 30 cards.
+    /// This function creates a new deck of cards with default values, e.g. a deck of French Cards with 52 cards, or a deck of SpotIt Cards with 57 cards.
     fn default() -> Self;
 
     /// This function mututate original deck and shuffles the deck of cards.
@@ -103,18 +106,13 @@ impl Deck<FrenchCard> for FrenchDeck {
 }
 
 impl Deck<SpotItCard> for SpotItDeck {
+    /// This function pushes one SpotIt! card to the deck of cards.
     fn push_card(&mut self, card: SpotItCard) {
         self.cards.push(card);
     }
-    /// This function creates a new deck of SpotIt Cards with default 1 symbol per card.
+    /// This function creates a new deck of SpotIt! Cards usually played, with 57 cards, 8 symbols each.
     fn default() -> Self {
-        let mut deck = Self::new();
-        for symbol in SpotItSymbol::iter() {
-            let mut card = SpotItCard(HashSet::new());
-            card.0.insert(symbol);
-            deck.cards.push(card);
-        }
-        deck
+        Self::generate_by_prime(7).unwrap()
     }
     fn new() -> Self {
         let cards: Vec<SpotItCard> = Vec::new();
@@ -264,12 +262,12 @@ mod tests {
 
     use super::*;
     #[test]
-    fn new_frenchdeck_has_52_cards() {
+    fn default_frenchdeck_has_52_cards() {
         let deck: FrenchDeck = FrenchDeck::default();
         assert_eq!(deck.cards.len(), 52);
     }
     #[test]
-    fn every_card_on_frenchdeck_is_unique() {
+    fn card_on_default_frenchdeck_is_unique() {
         let deck: FrenchDeck = FrenchDeck::default();
         let mut uniq = HashSet::new();
         assert!(deck.cards.iter().all(move |card| uniq.insert(card)));
@@ -286,13 +284,13 @@ mod tests {
     fn can_use_fn_to_pop_card_from_frenchdeck() {
         let mut deck: FrenchDeck = FrenchDeck::new();
         let card = FrenchCard(FrenchRank::Ace, FrenchSuit::Spade);
-        deck.cards.push(card.clone());
+        deck.push_card(card.clone());
         assert_eq!(deck.pop_card(), Some(card));
     }
     #[test]
-    fn new_spotitdeck_has_93_cards() {
+    fn default_spotitdeck_has_57_cards() {
         let deck: SpotItDeck = SpotItDeck::default();
-        assert_eq!(deck.cards.len(), 93);
+        assert_eq!(deck.cards.len(), 57);
     }
 
     #[test]
@@ -318,13 +316,7 @@ mod tests {
         assert_eq!(deck.pop_card(), Some(card));
         assert_eq!(deck.pop_card(), None);
     }
-    #[test]
-    fn each_spotitcard_has_1_suits() {
-        let deck: SpotItDeck = SpotItDeck::default();
-        for card in deck.cards {
-            assert_eq!(card.0.len(), 1);
-        }
-    }
+
     #[test]
     fn can_generate_right_cards_number_by_prime() {
         let deck = SpotItDeck::generate_by_prime(1).unwrap();
@@ -406,12 +398,17 @@ mod tests {
     #[test]
     fn can_pop_spotit_card_by_index() {
         let mut deck: SpotItDeck = SpotItDeck::default();
-        let first_card = SpotItCard(HashSet::from([SpotItSymbol::Yuzu]));
-        let last_card = SpotItCard(HashSet::from([SpotItSymbol::Apple]));
-        assert_eq!(deck.len(), 93);
-        assert_eq!(deck.pop_card_by_index(94), None);
-        assert_eq!(deck.pop_card_by_index(0), Some(last_card));
-        assert_eq!(deck.pop_card_by_index(91), Some(first_card));
-        assert_eq!(deck.len(), 91);
+        assert_eq!(deck.len(), 57);
+        assert_eq!(deck.pop_card_by_index(57), None);
+        let last_card = deck.pop_card();
+        for _ in 1..=deck.len() - 1 {
+            deck.pop_card();
+        }
+        let first_card = deck.pop_card();
+
+        let mut deck2: SpotItDeck = SpotItDeck::default();
+        assert_eq!(deck2.pop_card_by_index(56), last_card);
+        assert_eq!(deck2.pop_card_by_index(0), first_card);
+        assert_eq!(deck2.len(), 55);
     }
 }
